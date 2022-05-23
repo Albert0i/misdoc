@@ -134,6 +134,7 @@ c.
 <EOF>
 Written in 2021/08/13
 
+```console
 /*
 
                  uuuuuuu
@@ -172,3 +173,4 @@ https://textart.io/art/tag/skull/3
 Cool text art to use on your socials (>‿◠)✌
 https://cooltext.top/skull
 */
+```
