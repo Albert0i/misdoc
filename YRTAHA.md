@@ -15,10 +15,10 @@ At length, I manage to install the IIS components on my Win10 and determined to 
 the TA WebApp on it as a mirror site, ie: 
 
 Main URL:
-http://web2012-pro-01/ta/login.aspx
+http://web2022/ta/login.aspx
 
 Mirror URL: 
-http://20143albertoi/ta/login.aspx
+http://myhost/ta/login.aspx
 
 
 1. YRunner  
@@ -83,8 +83,8 @@ server busy page is shown.
 		}
 	}
 	. . . 
-	Web.config in web2012-pro-01
-	----------------------------
+	Web.config in web2022
+	---------------------
 	. . . 
 	<appSettings>
 	<!-- YRunner Exception handling -->
@@ -92,7 +92,7 @@ server busy page is shown.
 	<add key="YR_MASK_MSG" value="Database server is busy, please try again later... (YRnner.cs)"/>
 
 	<!--- <add key="YR_REDIRECT_URL" value="~/Content/busy.html?m={0}"/> -->
-	<add key="YR_REDIRECT_URL" value="http://20143albertoi/ta/login.aspx?m={0}"/>  
+	<add key="YR_REDIRECT_URL" value="http://myhost/ta/login.aspx?m={0}"/>  
 
 	<!-- YRunner Exception handling --> 
 	</appSettings>
