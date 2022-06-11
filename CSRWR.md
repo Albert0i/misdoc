@@ -10,7 +10,7 @@ No matter what brand of SQL servers you used, execution of SQL statements is alw
 >Being a luxury things, performance, not only means money. Luxury relates more to lifestyle and taste, whereas money only relates to tycoon(大款).
 
 
-## I. [SQL Joins](https://www.w3schools.com/sql/sql_join.asp)
+## II. [SQL Joins](https://www.w3schools.com/sql/sql_join.asp)
 A JOIN clause is used to combine rows from two or more tables, based on a related column between them. Let's look at a selection from the "Orders" table:
 
 ```console
@@ -30,61 +30,109 @@ Relational database system are complicated softwares, they twist disk files into
 What happens behind [SQL Processing](https://docs.oracle.com/database/121/TGSQL/tgsql_sqlproc.htm#TGSQL175) involves SQL Parsing, Syntax Check, Semantic Check, Optimization, and Execution. SQL Servers have intrinsic caching policy on their own. 
 
 
-## II. [“To cache, or not to cache: that is the question!”](https://www.goodreads.com/quotes/36560-to-be-or-not-to-be-that-is-the-question)
+## III. [“To cache, or not to cache: that is the policy!”](https://www.goodreads.com/quotes/36560-to-be-or-not-to-be-that-is-the-question)
 ```console
-SqlConnection conn = new SqlConnection(...);
-RedisClient redis = new RedisClient(...); 
+SqlConnection conn = new SqlConnection(ConnectionString);
+RedisClient redis = new RedisEndpoint(Host, Port);
 
+/* 
+   Create a Y2Runner instance
+   Y2Runner(SqlConnection conn, RedisClient redis=null);
+*/
+// (a) no cache
+Y2Runner yr = new Y2Runner(conn);
+
+// (b) with Cache
 Y2Runner yr = new Y2Runner(conn, redis);
 
-// 1. Run SQL statement and returns a datatable result 
-// RunSelectSQL(string sqlText, int ttl=60, string[] cacheTags);
-DataTable SomeTable = yr.RunSelectSQL("...", {"Orders", "Customers"});
+/* 
+   Run SQL statement and returns a datatable result
+   DataTable RunSelectSQL(string SQLText, int ttl=60, string[] CacheTags);
+*/
+// (a) ttl=60, all filenames in SQLText will be used as CacheTags.
+DataTable SomeTable = yr.RunSelectSQL(SQLText);
 
-// 2. Run SQL statement and return a value result
-// RunValueSQL(string sqlText, int ttl=60, string[] cacheTags);
-String SomeValue = yr.RunValueSQL("...", new string[] {"Orders", "Customers"}).ToString();
+// (b) ttl=120, all filenames in SQLText will be used as CacheTags.
+DataTable SomeTable = yr.RunSelectSQL(SQLText, 120);
 
+// (c) ttl=120, Only "Orders" will be used as CacheTag.
+DataTable SomeTable = yr.RunSelectSQL(SQLText, 120, new string[] {"Orders"});
+
+// (d) ttl=120, Only "Orders" and "Customers" will be used as CacheTags.
+DataTable SomeTable = yr.RunSelectSQL(SQLText, 120, new string[] {"Orders", "Customers"});
+
+// (e) Do not cache the result, all cacheTags will be discarded if specified. 
+DataTable SomeTable = yr.RunSelectSQL(SQLText, 0);
+
+/*
+   Run SQL statement and return a value result
+   Object RunValueSQL(string SQLText, int ttl=60, string[] cacheTags);
+*/
+// (a) ttl=60, all filenames in SQLText will be used as CacheTags.
+String SomeValue = yr.RunValueSQL(SQLText).ToString();
+
+// (b) ttl=120, all filenames in SQLText will be used as CacheTags.
+String SomeValue = yr.RunValueSQL(SQLText, 120).ToString();
+
+// (c) ttl=120, Only "Orders" will be used as CacheTag.
+String SomeValue = yr.RunValueSQL(SQLText, 120, new string[] {"Orders").ToString();
+
+// (d) ttl=120, Only "Orders" and "Customers" will be used as CacheTags.
+String SomeValue = yr.RunValueSQL(SQLText, 120, new string[] {"Orders", "Customers"}).ToString();
+
+// (e) Do not cache the result, all cacheTags will be discarded if specified.
+String SomeValue = yr.RunValueSQL(SQLText, 0).ToString();
 ```
-1. calculate hash value of SQL statement;
-2. \> GET hash-value;
-3. **if the result is not nil, refresh *ttl*, de-serialize and return datatable/value else go to step 4**;
-4. run the query and serialize the datatable/value to json-value;
+
+## IV. “To invalidae is a MUST!”
+```console
+...
+Y2Runner yr = new Y2Runner(conn, redis);
+/*
+   Run SQL statement to perform INSERT, UPDATE or DELETE operations.
+   Bool RunSQL(string SQLText);
+*/
+Bool Result = yr.RunSQL(SQLText);
+// The file involved will be used as CacheTag, ClearCache() will be subsequently invoked. 
+```
+
+## V. Cache in Action 
+if redis is specified in Y2Runner constructor and ttl value in RunSelectSQL and RunValueSQL is not zero: 
+1. calculate SHA256 Hash of SQLText;
+2. \> GET Hash;
+3. if the result is not nil, de-serialize json-value and return else go to step 4**;
+4. run the SQLText against SQL Server, serialize the the result to json-value; Run the following commands againsts Redis: 
 5. \> MULTI
-6. \> SET hash-value json-value EX *ttl*
-7. \> SADD Orders hash-value EX *ttl*
-8. \> SADD Customers hash-value EX *ttl*
+6. \> SET Hash json-value EX ttl
+7. \> SADD CacheTag Hash EX ttl
+8. Repeat step 7 if more than one CacheTag specified
 9. \> EXEC
 
-
-## III. “To invalidae is a MUST!”
 ```console
-Y2Runner yr = new Y2Runner(...);
-
-// 3. Run SQL statement to perform INSERT, UPDATE or DELETE operations.
-// RunSQL(string sqlText);
-Bool Result = yr.RunSQL("...");
-// Note: 'RunSQL' implicitly call clearCache() function. 
 ```
 
+![All those moments will be lost in time like tears in rain](img/All-those-moments-will-be-lost-in-time-like-tears-in-rain.jpg)
 
-## IV. Expire on time and Expire on demand
+To expire on demand
 ```console
-Y2Runner yr = new Y2Runner(...);
-
-yr.clearCache({"Orders", "Customers"});
+...
+Y2Runner yr = new Y2Runner(conn, redis);
+/*
+   Clear cached results associated with a CacheTag.
+   void ClearCache(string CacheTag);
+*/
+yr.ClearClear(CacheTag); 
 ```
-1. \>SMEMBERS Customers
-2. \>DEL hash-value(s)
-3. \>DEL Customers
+1. \>SMEMBERS CacheTag
+2. \>DEL Hash
+3. Repeat step 2 if more than one Hash
+4. \>DEL CacheTag
 
 
-## V. Conclusion
-```console
-Cache is expensive but fast; 
-Cache is fast but small;
-Cache is small deliberately used;
-```
+## VI. Conclusion
+
+![Knowledge is power but cash is king](img/knowledge-is-power-but-cash-is-king.jpg)
+
 There's no **Rule of Thumb** to cache policy, what should be cached and what shouldn't is completely domain specific. Cache is not panacea, improper use of caching would even downgrade system performance! 
 
 Let discuss what shouldn't be cached:
@@ -97,9 +145,9 @@ Let discuss what shouldn't be cached:
 And, what benefits from cached:  
 1. Pages use code-table(s);
 2. Common information or satistics pages;
-3. 
 
-### VI. Reference 
+
+### VII. Reference 
 1. [Query Caching with Redis](https://redis.com/blog/query-caching-redis/)
 2. [Using Redis with Nodejs and MongoDB](https://subhrapaladhi.medium.com/using-redis-with-nodejs-and-mongodb-28e5a39a2696)
 3. [Five Best Ways To Use Redis With ASP.NET MVC](https://www.c-sharpcorner.com/article/five-best-ways-to-use-redis-with-asp-net-mvc/)
