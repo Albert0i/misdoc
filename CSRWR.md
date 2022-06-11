@@ -84,7 +84,7 @@ String SomeValue = yr.RunValueSQL(SQLText, 120, new string[] {"Orders", "Custome
 String SomeValue = yr.RunValueSQL(SQLText, 0).ToString();
 ```
 
-## IV. “To invalidae is a MUST!”
+## IV. “To invalidate is a MUST!”
 ```console
 ...
 Y2Runner yr = new Y2Runner(conn, redis);
@@ -144,6 +144,7 @@ Let's discuss what shouldn't be cached:
 And, what benefits from cached: 
 1. Pages use code-table(s);
 2. Common information or satistics pages;
+3. Other less regularly updated pages. 
 
 
 ### VII. Reference 
