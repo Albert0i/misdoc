@@ -108,12 +108,11 @@ if redis is specified in Y2Runner constructor and ttl value in RunSelectSQL and 
 8. Repeat step 7 if more than one CacheTag specified
 9. \> EXEC
 
-```console
-```
+To expire on time:
 
 ![All those moments will be lost in time like tears in rain](img/All-those-moments-will-be-lost-in-time-like-tears-in-rain.jpg)
 
-To expire on demand
+To expire on demand:
 ```console
 ...
 Y2Runner yr = new Y2Runner(conn, redis);
@@ -133,16 +132,16 @@ yr.ClearClear(CacheTag);
 
 ![Knowledge is power but cash is king](img/knowledge-is-power-but-cash-is-king.jpg)
 
-There's no **Rule of Thumb** to cache policy, what should be cached and what shouldn't is completely domain specific. Cache is not panacea, improper use of caching would even downgrade system performance! 
+There's no **Rule of Thumb** to cache policy, what should be cached and what shouldn't is completely domain specific. Cache is not panacea, improper use of caching would even downgrade system performance significantly! 
 
-Let discuss what shouldn't be cached:
+Let's discuss what shouldn't be cached:
 1. Rarely visited pages;
 2. Pages used by a few;
-3. CRUD pages and their direct parent;
-4. User specific information page;
-5. All administrative pages (*Bosses don't like stale info*);
+3. CRUD pages and their direct parents;
+4. User specific information pages;
+5. All administrative pages (*Bosses don't like stale stuffs*);
 
-And, what benefits from cached:  
+And, what benefits from cached: 
 1. Pages use code-table(s);
 2. Common information or satistics pages;
 
