@@ -84,7 +84,7 @@ String SomeValue = yr.RunValueSQL(SQLText, 120, new string[] {"Orders", "Custome
 String SomeValue = yr.RunValueSQL(SQLText, 0).ToString();
 ```
 
-## IV. “To invalidate is a <span style="color:red">MUST</span>!”
+## IV. “To invalidate is a `MUST`!”
 ```c#
 ...
 Y2Runner yr = new Y2Runner(conn, redis);
