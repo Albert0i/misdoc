@@ -153,8 +153,9 @@ And, what benefits from cached:
 3. [Five Best Ways To Use Redis With ASP.NET MVC](https://www.c-sharpcorner.com/article/five-best-ways-to-use-redis-with-asp-net-mvc/)
 4. [4 WAYS TO CONVERT JSON TO DATATABLE IN C# – ASP.NET](https://www.technothirsty.com/4-ways-to-convert-json-to-datatable-csharp-asp-net/)
 5. [Convert Datatable to JSON in Asp.net C# [3 ways]](https://codepedia.info/convert-datatable-to-json-in-asp-net-c-sharp)
-6. [Redis 101: Foundation and Core Concepts](https://medium.com/@Mohammad_Hasham123/redis-101-foundation-and-core-concepts-41f32c2bf021)
-7. [Redis | Transactions](https://redis.io/docs/manual/transactions/)
-8. [Compute SHA256 Hash In C#](https://www.c-sharpcorner.com/article/compute-sha256-hash-in-c-sharp/)
+6. [Deserialize a DataSet](https://www.newtonsoft.com/json/help/html/DeserializeDataSet.htm)
+7. [Redis 101: Foundation and Core Concepts](https://medium.com/@Mohammad_Hasham123/redis-101-foundation-and-core-concepts-41f32c2bf021)
+8. [Redis | Transactions](https://redis.io/docs/manual/transactions/)
+9. [Compute SHA256 Hash In C#](https://www.c-sharpcorner.com/article/compute-sha256-hash-in-c-sharp/)
 
 ## EOF (2022/06/13)
