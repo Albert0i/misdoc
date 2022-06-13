@@ -84,7 +84,7 @@ String SomeValue = yr.RunValueSQL(SQLText, 120, new string[] {"Orders", "Custome
 String SomeValue = yr.RunValueSQL(SQLText, 0).ToString();
 ```
 
-## IV. “To invalidate is a `MUST`!”
+## IV. “To invalidate is a <span style="color:red">MUST</span>!”
 ```c#
 ...
 Y2Runner yr = new Y2Runner(conn, redis);
@@ -156,5 +156,6 @@ And, what benefits from cached:
 6. [Redis 101: Foundation and Core Concepts](https://medium.com/@Mohammad_Hasham123/redis-101-foundation-and-core-concepts-41f32c2bf021)
 7. [Redis | Transactions](https://redis.io/docs/manual/transactions/)
 8. [Compute SHA256 Hash In C#](https://www.c-sharpcorner.com/article/compute-sha256-hash-in-c-sharp/)
+9. https://drive.google.com/drive/my-drive
 
 ## EOF (2022/06/13)
