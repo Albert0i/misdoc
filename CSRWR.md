@@ -13,13 +13,13 @@ No matter what brand of SQL servers you used, execution of SQL statements is alw
 ## II. [SQL Joins](https://www.w3schools.com/sql/sql_join.asp)
 A JOIN clause is used to combine rows from two or more tables, based on a related column between them. Let's look at a selection from the "Orders" table:
 
-```console
+```sql
 SELECT OrderID, CustomerID, OrderDate
 FROM Orders;
 ```
 And selects records that have matching values in both tables:
 
-```console
+```sql
 SELECT Orders.OrderID, Customers.CustomerName, Orders.OrderDate
 FROM Orders
 INNER JOIN Customers 
@@ -31,7 +31,7 @@ What happens behind [SQL Processing](https://docs.oracle.com/database/121/TGSQL/
 
 
 ## III. [“To cache, or not to cache: that is the policy!”](https://www.goodreads.com/quotes/36560-to-be-or-not-to-be-that-is-the-question)
-```console
+```c#
 SqlConnection conn = new SqlConnection(ConnectionString);
 RedisClient redis = new RedisEndpoint(Host, Port);
 
@@ -84,8 +84,8 @@ String SomeValue = yr.RunValueSQL(SQLText, 120, new string[] {"Orders", "Custome
 String SomeValue = yr.RunValueSQL(SQLText, 0).ToString();
 ```
 
-## IV. “To invalidate is a MUST!”
-```console
+## IV. “To invalidate is a `MUST`!”
+```c#
 ...
 Y2Runner yr = new Y2Runner(conn, redis);
 /*
@@ -147,7 +147,7 @@ And, what benefits from cached:
 3. Other less regularly updated pages. 
 
 
-### VII. Reference 
+## VII. Reference 
 1. [Query Caching with Redis](https://redis.com/blog/query-caching-redis/)
 2. [Using Redis with Nodejs and MongoDB](https://subhrapaladhi.medium.com/using-redis-with-nodejs-and-mongodb-28e5a39a2696)
 3. [Five Best Ways To Use Redis With ASP.NET MVC](https://www.c-sharpcorner.com/article/five-best-ways-to-use-redis-with-asp-net-mvc/)
@@ -157,4 +157,4 @@ And, what benefits from cached:
 7. [Redis | Transactions](https://redis.io/docs/manual/transactions/)
 8. [Compute SHA256 Hash In C#](https://www.c-sharpcorner.com/article/compute-sha256-hash-in-c-sharp/)
 
-## EOF (2022/06/12)
+## EOF (2022/06/13)
