@@ -158,5 +158,6 @@ And, what benefits from cached:
 8. [Compute SHA256 Hash In C#](https://www.c-sharpcorner.com/article/compute-sha256-hash-in-c-sharp/)
 9. [Converting string to byte array in C#](https://stackoverflow.com/questions/16072709/converting-string-to-byte-array-in-c-sharp)
 10. [How to convert byte array to string [duplicate]](https://stackoverflow.com/questions/11654562/how-to-convert-byte-array-to-str)
+11. [Time elapse computation in milliseconds C#](https://stackoverflow.com/questions/13589853/time-elapse-computation-in-milliseconds-c-sharp)
 
 ## EOF (2022/06/21)
