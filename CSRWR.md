@@ -113,10 +113,11 @@ if ((redis != null) && (ttl > 0))
    if (CacheTags == null)
          CacheTags = ParseCacheTagsfromSelectSQL(CommandText);
    foreach (string CacheTag in CacheTags)
-   {
-         redis.SAdd(CacheTag, Encoding.ASCII.GetBytes(HashedKey));
-         redis.Expire(CacheTag, ttl);
-   }
+         if (!String.IsNullOrEmpty(CacheTag))
+         {
+            redis.SAdd(CacheTag, Encoding.ASCII.GetBytes(HashedKey));
+            redis.Expire(CacheTag, ttl);
+         }
 }
 ```
 To expire on time:
