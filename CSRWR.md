@@ -32,12 +32,15 @@ What happens behind [SQL Processing](https://docs.oracle.com/database/121/TGSQL/
 
 ## III. [“To cache, or not to cache: that is the policy!”](https://www.goodreads.com/quotes/36560-to-be-or-not-to-be-that-is-the-question)
 ```c#
-SqlConnection conn = new SqlConnection(ConnectionString);
-RedisClient redis = new RedisEndpoint(Host, Port);
-
+// Oracle 
+OracleConnection conn = new OracleConnection(ConnectionString);
+// Redis
+RedisClient redis = new RedisClient(Host, Port);
+...
+Y2Runner yr = new Y2Runner(conn, redis);
 /* 
    Create a Y2Runner instance
-   Y2Runner(SqlConnection conn, RedisClient redis=null);
+   public Y2Runner(OracleConnection conn, RedisClient redis = null, string OnErrorURI = "")
 */
 // (a) no cache
 Y2Runner yr = new Y2Runner(conn);
@@ -45,9 +48,12 @@ Y2Runner yr = new Y2Runner(conn);
 // (b) with Cache
 Y2Runner yr = new Y2Runner(conn, redis);
 
+// (b) with Cache and redirect to URI when error happen
+Y2Runner yr = new Y2Runner(conn, redis, "~/Content/busy.html?m={0}");
+
 /* 
    Run SQL statement and returns a datatable result
-   DataTable RunSelectSQL(string SQLText, int ttl=60, string[] CacheTags);
+   public DataTable RunSelectSQL(string CommandText, int ttl = DEFAULT_TTL, string[] CacheTags=null)
 */
 // (a) ttl=60, all filenames in SQLText will be used as CacheTags.
 DataTable SomeTable = yr.RunSelectSQL(SQLText);
@@ -63,25 +69,6 @@ DataTable SomeTable = yr.RunSelectSQL(SQLText, 120, new string[] {"Orders", "Cus
 
 // (e) Do not cache the result, all cacheTags will be discarded if specified. 
 DataTable SomeTable = yr.RunSelectSQL(SQLText, 0);
-
-/*
-   Run SQL statement and return a value result
-   Object RunValueSQL(string SQLText, int ttl=60, string[] cacheTags);
-*/
-// (a) ttl=60, all filenames in SQLText will be used as CacheTags.
-String SomeValue = yr.RunValueSQL(SQLText).ToString();
-
-// (b) ttl=120, all filenames in SQLText will be used as CacheTags.
-String SomeValue = yr.RunValueSQL(SQLText, 120).ToString();
-
-// (c) ttl=120, Only "Orders" will be used as CacheTag.
-String SomeValue = yr.RunValueSQL(SQLText, 120, new string[] {"Orders").ToString();
-
-// (d) ttl=120, Only "Orders" and "Customers" will be used as CacheTags.
-String SomeValue = yr.RunValueSQL(SQLText, 120, new string[] {"Orders", "Customers"}).ToString();
-
-// (e) Do not cache the result, all cacheTags will be discarded if specified.
-String SomeValue = yr.RunValueSQL(SQLText, 0).ToString();
 ```
 
 ## IV. “To invalidate is a `MUST`!”
@@ -90,43 +77,63 @@ String SomeValue = yr.RunValueSQL(SQLText, 0).ToString();
 Y2Runner yr = new Y2Runner(conn, redis);
 /*
    Run SQL statement to perform INSERT, UPDATE or DELETE operations.
-   Bool RunSQL(string SQLText);
+   public bool RunSQL(string CommandText, string[] CacheTags = null)
 */
-Bool Result = yr.RunSQL(SQLText);
-// The file involved will be used as CacheTag, ClearCache() will be subsequently invoked. 
+// (a) Use default CacheTags 
+bool Result = yr.RunSQL(SQLText);
+
+// (b) All specified CacheTags get called automatically.
+bool Result = yr.RunSQL(SQLText, new string[] {"Orders", "Customers"});
 ```
 
 ## V. Cache in Action 
-if redis is specified in Y2Runner constructor and ttl value in RunSelectSQL and RunValueSQL is not zero: 
-1. calculate SHA256 Hash of SQLText;
-2. \> GET Hash;
-3. if the result is not nil, de-serialize json-value and return else go to step 4**;
-4. run the SQLText against SQL Server, serialize the the result to json-value; Run the following commands againsts Redis: 
-5. \> MULTI
-6. \> SET Hash json-value EX ttl
-7. \> SADD CacheTag Hash EX ttl
-8. Repeat step 7 if more than one CacheTag specified
-9. \> EXEC
+On invoking **RunSelectSQL**: 
+```c#
+   if ((redis != null) && (redis.GetValue(HashedKey) != null))
+   {
+      // Hit! Load from cache...
+      Debug.WriteLine(String.Format("\"{0}\" hit! load from cache...", HashedKey));
+      DataSet dataSet = JsonConvert.DeserializeObject<DataSet>(redis.GetValue(HashedKey));
+      ret = dataSet.Tables["Table1"];
 
+      return ret; 
+   }
+...
+// Read data from server. 
+...
+if ((redis != null) && (ttl > 0))
+{
+   // Missed! Add to cache...
+   Debug.WriteLine(String.Format("\"{0}\" missed! Add to cache...", HashedKey));
+   string JSONValue = JsonConvert.SerializeObject(ret);
+   redis.SetValue(HashedKey, String.Format("{{\"Table1\": {0} }}", JSONValue), new TimeSpan(0, 0, ttl));
+
+   if (CacheTags == null)
+         CacheTags = ParseCacheTagsfromSelectSQL(CommandText);
+   foreach (string CacheTag in CacheTags)
+   {
+         redis.SAdd(CacheTag, Encoding.ASCII.GetBytes(HashedKey));
+         redis.Expire(CacheTag, ttl);
+   }
+}
+```
 To expire on time:
 
 ![All those moments will be lost in time like tears in rain](img/All-those-moments-will-be-lost-in-time-like-tears-in-rain.jpg)
 
-To expire on demand:
-```console
-...
-Y2Runner yr = new Y2Runner(conn, redis);
-/*
-   Clear cached results associated with a CacheTag.
-   void ClearCache(string CacheTag);
-*/
-yr.ClearClear(CacheTag); 
+To expire on demand by invoking **RunSQL**, *RemoveFromCache* get called automatically:
+```c#
+public void RemoveFromCache(string CacheTag)
+{
+   byte[][] smembers = redis.SMembers(CacheTag);
+   foreach (byte[] bytes in smembers)
+   {
+      string member = Encoding.Default.GetString(bytes);
+      redis.Del(member);
+   }
+   redis.Del(CacheTag);
+}
 ```
-1. \>SMEMBERS CacheTag
-2. \>DEL Hash
-3. Repeat step 2 if more than one Hash
-4. \>DEL CacheTag
-
 
 ## VI. Conclusion
 
@@ -160,4 +167,4 @@ And, what benefits from cached:
 10. [How to convert byte array to string [duplicate]](https://stackoverflow.com/questions/11654562/how-to-convert-byte-array-to-str)
 11. [Time elapse computation in milliseconds C#](https://stackoverflow.com/questions/13589853/time-elapse-computation-in-milliseconds-c-sharp)
 
-## EOF (2022/06/21)
+## EOF (2022/06/17)
