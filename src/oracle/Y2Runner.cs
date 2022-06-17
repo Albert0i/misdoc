@@ -60,7 +60,7 @@ public partial class Y2Runner : IDisposable
         #endif
 
         // With redis
-        if ((this.redis != null) && (redis.GetValue(HashedKey) != null))
+        if ((redis != null) && (redis.GetValue(HashedKey) != null))
         {
             // Hit! Load from cache...
             Debug.WriteLine(String.Format("\"{0}\" hit! load from cache...", HashedKey));
@@ -80,8 +80,8 @@ public partial class Y2Runner : IDisposable
         cmd.CommandText = CommandText;
         ret.Load(cmd.ExecuteReader());
 
-        // With redis 
-        if (this.redis != null)
+        // With redis and ttl > 0
+        if ((redis != null) && (ttl > 0))
         {
             // Missed! Add to cache...
             Debug.WriteLine(String.Format("\"{0}\" missed! Add to cache...", HashedKey));
@@ -184,7 +184,7 @@ public partial class Y2Runner : IDisposable
         return ret;
     }
 
-    public int RunInsertSQLYieldRowID(string CommandText, string rowid_name = "id")
+    public int RunInsertSQLYieldRowID(string CommandText, string rowid_name = "id", string[] CacheTags = null)
     {
         int row_id = 0;
         int rows_affected = 0;            
@@ -212,6 +212,14 @@ public partial class Y2Runner : IDisposable
 
             // Increase pending transaction by 1 
             pendingTrans++;
+
+            if (redis != null)
+            {
+                if (CacheTags == null)
+                    CacheTags = ParseCacheTagsfromSQL(CommandText);
+                foreach (string CacheTag in CacheTags)
+                    RemoveFromCache(CacheTag);
+            }
         }
         catch (OracleException ex)
         {
@@ -312,7 +320,7 @@ public partial class Y2Runner : IDisposable
             Debug.WriteLine(String.Format("Y2Runner: {0} transaction{1} pending.", pendingTrans, (pendingTrans == 1 ? "" : "s")));
         #endif
 
-        this.cmd.Dispose();
+        cmd.Dispose();
     }
 #endregion
 
