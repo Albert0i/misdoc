@@ -91,10 +91,11 @@ public partial class Y2Runner : IDisposable
             if (CacheTags == null)
                 CacheTags = ParseCacheTagsfromSelectSQL(CommandText);
             foreach (string CacheTag in CacheTags)
-            {
-                redis.SAdd(CacheTag, Encoding.ASCII.GetBytes(HashedKey));
-                redis.Expire(CacheTag, ttl);
-            }
+                if (!String.IsNullOrEmpty(CacheTag))
+                {
+                    redis.SAdd(CacheTag, Encoding.ASCII.GetBytes(HashedKey));
+                    redis.Expire(CacheTag, ttl);
+                }
         }
 
         #if DEBUG
@@ -160,7 +161,7 @@ public partial class Y2Runner : IDisposable
                 if (CacheTags == null)
                     CacheTags = ParseCacheTagsfromSQL(CommandText);
                 foreach (string CacheTag in CacheTags)
-                    RemoveFromCache(CacheTag);
+                    if (!String.IsNullOrEmpty(CacheTag)) RemoveFromCache(CacheTag);
             }
         }
         catch (OracleException ex)
@@ -218,7 +219,7 @@ public partial class Y2Runner : IDisposable
                 if (CacheTags == null)
                     CacheTags = ParseCacheTagsfromSQL(CommandText);
                 foreach (string CacheTag in CacheTags)
-                    RemoveFromCache(CacheTag);
+                    if (!String.IsNullOrEmpty(CacheTag)) RemoveFromCache(CacheTag);
             }
         }
         catch (OracleException ex)
@@ -325,17 +326,17 @@ public partial class Y2Runner : IDisposable
 #endregion
 
 #region Redis 
-    public void AddToCache(string CacheKey, string CacheValue, string CacheTag="", int ttl = DEFAULT_TTL)
-    {
-        redis.SetValue(CacheKey, String.Format("{{\"Table1\": {0} }}", CacheValue), new TimeSpan(0, 0, ttl));
-        if (CacheTag != "")
-        {
-            // Converting string to byte array in C#
-            // https://stackoverflow.com/questions/16072709/converting-string-to-byte-array-in-c-sharp
-            redis.SAdd(CacheTag, Encoding.ASCII.GetBytes(CacheKey));
-            redis.Expire(CacheTag, ttl);
-        }
-    }
+    //public void AddToCache(string CacheKey, string CacheValue, string CacheTag="", int ttl = DEFAULT_TTL)
+    //{
+    //    redis.SetValue(CacheKey, String.Format("{{\"Table1\": {0} }}", CacheValue), new TimeSpan(0, 0, ttl));
+    //    if (CacheTag != "")
+    //    {
+    //        // Converting string to byte array in C#
+    //        // https://stackoverflow.com/questions/16072709/converting-string-to-byte-array-in-c-sharp
+    //        redis.SAdd(CacheTag, Encoding.ASCII.GetBytes(CacheKey));
+    //        redis.Expire(CacheTag, ttl);
+    //    }
+    //}
 
     public void RemoveFromCache(string CacheTag)
     {
@@ -395,9 +396,9 @@ public partial class Y2Runner : IDisposable
         // Loop through and parse each tokens
         foreach (string token in tokens)
         {
-            #if DEBUG
-                Debug.WriteLine(String.Format("token=[{0}], FromMet={1}, FromUsed={2}, JoinMet={3}, i={4}", token, FromMet, FromUsed, JoinMet, i));
-            #endif
+            //#if DEBUG
+            //    Debug.WriteLine(String.Format("token=[{0}], FromMet={1}, FromUsed={2}, JoinMet={3}, i={4}", token, FromMet, FromUsed, JoinMet, i));
+            //#endif
 
             switch (token.ToLower().Trim())
             {
@@ -449,7 +450,8 @@ public partial class Y2Runner : IDisposable
             result[i++] = g.ToString();
             m = m.NextMatch();
         }
-
+        // How to remove duplicate values from an array in C#
+        // https://www.tutorialsteacher.com/articles/remove-duplicate-values-from-array-in-csharp
         return result;
     }
 
