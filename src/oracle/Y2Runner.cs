@@ -14,7 +14,7 @@
  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public        
  * License for more details.                                                   
  */
-//#undef DEBUG    // <-- comment this line in development environment. 
+//#undef DEBUG    // <--- Make sure DEBUG is off in production environment. 
 
 using System;
 using Oracle.ManagedDataAccess.Client;
@@ -25,6 +25,8 @@ using System.Text;
 using System.Security.Cryptography;
 using ServiceStack.Redis;
 using Newtonsoft.Json;
+using System.Text.RegularExpressions;
+using System.Linq;
 
 public partial class Y2Runner : IDisposable
 {
@@ -35,10 +37,11 @@ public partial class Y2Runner : IDisposable
     private int pendingTrans;
 
     // Redis 
-    public const int DEFAULT_TTL = 60; 
+    private const int DEFAULT_TTL = 60;
+    private const int MAX_CACHE_TAGS = 24; 
     private RedisClient redis = null;
 
-    public const string DEFAULT_ONERROR_URI = "~/Content/busy.html?m={0}";
+    private const string DEFAULT_ONERROR_URI = "~/Content/busy.html?m={0}";
     private string OnErrorURI = "";
     public string message;
 
@@ -85,6 +88,8 @@ public partial class Y2Runner : IDisposable
             string JSONValue = JsonConvert.SerializeObject(ret);
             redis.SetValue(HashedKey, String.Format("{{\"Table1\": {0} }}", JSONValue), new TimeSpan(0, 0, ttl));
 
+            if (CacheTags == null)
+                CacheTags = ParseCacheTagsfromSelectSQL(CommandText);
             foreach (string CacheTag in CacheTags)
             {
                 redis.SAdd(CacheTag, Encoding.ASCII.GetBytes(HashedKey));
@@ -110,7 +115,7 @@ public partial class Y2Runner : IDisposable
             long elapsed_time;
             stopwatch.Start();
 
-            Debug.WriteLine("Y2Runner.RunValueSQL: " + cmdText);
+            Debug.WriteLine("Y2Runner.RunValueSQL: " + CommandText);
         #endif
 
         cmd.CommandText = CommandText;
@@ -150,8 +155,13 @@ public partial class Y2Runner : IDisposable
             // Increase pending transaction by 1 
             pendingTrans++;
 
-            foreach (string CacheTag in CacheTags)
-                RemoveFromCache(CacheTag);
+            if (redis !=null)
+            {
+                if (CacheTags == null)
+                    CacheTags = ParseCacheTagsfromSQL(CommandText);
+                foreach (string CacheTag in CacheTags)
+                    RemoveFromCache(CacheTag);
+            }
         }
         catch (OracleException ex)
         {
@@ -174,7 +184,7 @@ public partial class Y2Runner : IDisposable
         return ret;
     }
 
-    public int RunInsertSQLYieldRowID(string cmdText, string rowid_name = "id")
+    public int RunInsertSQLYieldRowID(string CommandText, string rowid_name = "id")
     {
         int row_id = 0;
         int rows_affected = 0;            
@@ -182,7 +192,7 @@ public partial class Y2Runner : IDisposable
         OracleParameter outputParameter = new OracleParameter("temp_id", OracleDbType.Decimal);
         outputParameter.Direction = ParameterDirection.Output;
 
-        cmd.CommandText = cmdText + String.Format(sql_stub, rowid_name);
+        cmd.CommandText = CommandText + String.Format(sql_stub, rowid_name);
 
         #if DEBUG
             Stopwatch stopwatch = new Stopwatch();
@@ -351,63 +361,91 @@ public partial class Y2Runner : IDisposable
             return builder.ToString();
         }
     }
-#endregion
+    #endregion
 
-#region Helpers
-    protected bool CheckCommandText(String cmdText)
+    #region Helpers
+    //select * from (select abc from xyz where a=b) a f1, b f2 where f1.key=f2.key
+    public string[] ParseCacheTagsfromSelectSQL(string CommandText)
     {
-        string[] cmdArray;
-        string cmdStr;
-        bool ret = true;
+        #if DEBUG
+            Debug.WriteLine(String.Format("CommandText=[{0}]", CommandText));            
+        #endif
+        // 1. Add space before and after , ( and ) to ease subsequent parsing.
+        CommandText = CommandText.Replace(",", " , ").
+                                  Replace("(", " ( ").
+                                  Replace(")", " ) ");
+        // 2. Only ONE space is allowed between tokens. 
+        string[] tokens = Regex.Replace(CommandText, @"\s+", " ").
+                                Split(new[] { " " }, StringSplitOptions.None);
 
-        message = "";
-        // VB: cmdArray = String.Split(cmdText, ";");
-        cmdArray = cmdText.Split(new[] { ";" }, StringSplitOptions.None);
-        for (int i = 0; i <= cmdArray.Length - 1; i++)
+        string[] result = new string[MAX_CACHE_TAGS];
+        int i = 0;  // Number of CacheTags
+        bool FromMet = false;
+        bool FromUsed = false;
+        bool JoinMet = false;
+
+        // Loop through and parse each tokens
+        foreach (string token in tokens)
         {
-            // Omit empty command. 
-            cmdStr = cmdArray[i].Trim();
-            if (cmdStr == "")
-                continue;
-            else
+            #if DEBUG
+                Debug.WriteLine(String.Format("token=[{0}], FromMet={1}, FromUsed={2}, JoinMet={3}, i={4}", token, FromMet, FromUsed, JoinMet, i));
+            #endif
+
+            switch (token.ToLower().Trim())
             {
-                // Only allow 'insert', 'update' and 'delete'; 
-                // 'update' and 'delete' must have 'where' clause. 
-                // VB: switch (Strings.Split(cmdStr)(0).ToLower())
-                switch (cmdStr.Split(new[] { " " }, StringSplitOptions.None)[0].ToLower())
-                {
-                    case "insert":
-                        break;
-                    case "update":
-                        if ((cmdStr.ToLower().Contains("where")))
-                            continue;
-                        else
-                        {
-                            message += ("Command no." + (i + 1) + ": Update missing where clause.<br />");
-                            ret = false;
-                        }
-                        break;
-                    case "delete":
-                        if ((cmdStr.ToLower().Contains("where")))
-                            continue;
-                        else
-                        {
-                            message += ("Command no." + (i + 1) + ": Delete missing where clause.<br />");
-                            ret = false;
-                        }
-                        break;
-                    default:
-                        message += ("Command no." + (i + 1) + ": Only insert, update and delete are allowed.<br />");
-                        ret = false;
-                        break;
-                }
+                case "from":
+                    FromMet = true;
+                    FromUsed = false;
+                    break;
+                case ",":
+                    if (FromMet && FromUsed)
+                        FromUsed = false;
+                    break;
+                case "join":
+                    JoinMet = true;
+                    break;
+                case "(":
+                    FromMet = false;
+                    FromUsed = true;
+                    JoinMet = false;
+                    break;
+                default:                    
+                    if (JoinMet)
+                    {
+                        result[i++] = token;
+                        JoinMet = false;
+                    }
+                    else if (FromMet && !FromUsed)
+                    {
+                        result[i++] = token;
+                        FromUsed = true;
+                    }
+                    break;
             }
         }
-
-        return ret;
+        // How to remove duplicate values from an array in C#
+        // https://www.tutorialsteacher.com/articles/remove-duplicate-values-from-array-in-csharp
+        return result.Distinct().ToArray();
     }
 
-    public string EscapeQuote(string s)
+    public string[] ParseCacheTagsfromSQL(string CommandText)
+    {
+        string[] result = new string[MAX_CACHE_TAGS];
+        int i = 0;
+        Regex regex = new Regex(@"(from|join|into|update)\s+(\w+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        Match m = regex.Match(CommandText);
+
+        while (m.Success)
+        {
+            Group g = m.Groups[2];
+            result[i++] = g.ToString();
+            m = m.NextMatch();
+        }
+
+        return result;
+    }
+
+    public string EscapeSingleQuote(string s)
     {
         if (s == "")
             return " ";
@@ -421,7 +459,7 @@ public partial class Y2Runner : IDisposable
 
         if ((index < 0) | (index >= dt.Columns.Count))
             index = 0;
-        // 
+
         foreach (DataRow r in dt.Rows)
         {
             if ((ret != ""))
