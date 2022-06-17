@@ -89,6 +89,8 @@ bool Result = yr.RunSQL(SQLText, new string[] {"Orders", "Customers"});
 ## V. Cache in Action 
 On invoking **RunSelectSQL**: 
 ```c#
+   string HashedKey = ComputeSha256Hash(CommandText);
+...
    if ((redis != null) && (redis.GetValue(HashedKey) != null))
    {
       // Hit! Load from cache...
@@ -136,7 +138,6 @@ public void RemoveFromCache(string CacheTag)
 ```
 
 ## VI. Conclusion
-
 ![Knowledge is power but cash is king](img/knowledge-is-power-but-cash-is-king.jpg)
 
 There's no **Rule of Thumb** to cache policy, what should be cached and what shouldn't is completely domain specific. Cache is not panacea, improper use of caching would even downgrade system performance significantly! 
@@ -166,5 +167,6 @@ And, what benefits from cached:
 9. [Converting string to byte array in C#](https://stackoverflow.com/questions/16072709/converting-string-to-byte-array-in-c-sharp)
 10. [How to convert byte array to string [duplicate]](https://stackoverflow.com/questions/11654562/how-to-convert-byte-array-to-str)
 11. [Time elapse computation in milliseconds C#](https://stackoverflow.com/questions/13589853/time-elapse-computation-in-milliseconds-c-sharp)
+12. [How to remove duplicate values from an array in C#](https://www.tutorialsteacher.com/articles/remove-duplicate-values-from-array-in-csharp)
 
 ## EOF (2022/06/17)
