@@ -30,29 +30,41 @@ When using this feature, some host systems might experience significant Oracle V
 This is the easy part. Since TA is written in such a way that no external dependency exists. 
 All packages are installed via NuGet package manager at application level. It connects to an 
 oracle database as defined in web.config: 
-   . . . 
-   <add name="conn" connectionString="DATA SOURCE=oracle12-scan/pdbwrk;USER ID=userid;PASSWORD=pwd;PERSIST SECURITY INFO=True;Connection Timeout=120;Max Pool Size=500;" providerName="Oracle.ManagedDataAccess.Client" />
-   . . .
 
-TA uses ".NET v4.5 Classic" application pool runs under 'Default Web Site'. 
+```xml
+<add name="conn" connectionString="DATA SOURCE=oracle12-scan/mypdb;USER ID=myuserid;PASSWORD=mypwd;PERSIST SECURITY INFO=True;Connection Timeout=120;Max Pool Size=500;" providerName="Oracle.ManagedDataAccess.Client" />
+```
+
+TA uses **.NET v4.5 Classic** application pool runs under **Default Web Site**. 
 
 
 ## 2. The Image 
 Officially, there are two images capable of running WebForm programs: 
+```console
    mcr.microsoft.com/dotnet/framework/aspnet:4.8
+```
+   
 for .NET framework version 4.8, which is the latest.  
-
+```console
    mcr.microsoft.com/dotnet/framework/aspnet:3.5
+```
 for .NET framework version 3.5, which is for older programs. 
 
-Around 15G each! Just spend some time to pull your image in lunch time... 
+Around **`15G`** each! Just spend some time to pull your image in lunch time... 
+
+---
+### `corrigendum`
+
+Using image **mcr.microsoft.com/dotnet/framework/aspnet:4.8-windowsservercore-ltsc2019** significantly reduces image size.
+
+![mcr.microsoft.com/dotnet/framework/aspnet:4.8-windowsservercore-ltsc2019](img/4.8-windowsservercore-ltsc2019.JPG)
+---
 
 
 ## 3. The Scripts 
 The hardcore part of dockerizing is to create a Dockerfile. 
 
-   Dockerfile
-   ----------
+   ```yml
    FROM mcr.microsoft.com/dotnet/framework/aspnet:4.8
 
    SHELL ["powershell"]
@@ -69,19 +81,20 @@ The hardcore part of dockerizing is to create a Dockerfile.
        -Name ServerPriorityTimeLimit -Value 0 -Type DWord
 
    COPY TA /inetpub/wwwroot/TA
+   ```
 
-Everything just like ordinary Dockerfile except the RUN command. It create two folders, 
+Everything just like ordinary Dockerfile except the **RUN** command. It create two folders, 
 remove and re-create Default Web Site, create WebApplication just like deploying a website 
 manually.  
 
-SHELL ["powershell"] changes to a different shell for the rest of the Dockerfile, so I can 
+**SHELL ["powershell"]** changes to a different shell for the rest of the Dockerfile, so I can 
 run PowerShell cmdlets.
 
-RUN Set-ItemProperty turns off the Windows DNS cache inside the image, so any DNS requests 
+**RUN Set-ItemProperty** turns off the Windows DNS cache inside the image, so any DNS requests 
 get served by Docker.
 
-   Makefile
-   --------
+   ### Makefile
+   ```bash
    . . . 
    build:
       docker build --tag albert0i/ta:2.8.1 --no-cache . 
@@ -92,32 +105,30 @@ get served by Docker.
    down:
       docker container stop ta
    . . .
+   ```
    
 A Makefile is used to facilitate the whole build-and-run lifecycle. 
 
 
 ## 4. Summary 
 In case your windows container can't reach the database, try to run: 
-
+```bash
    docker network create -d transparent trans
-
+```
 I don't know why but it works for me... 
+
+![docker network create -d transparent trans](img/docker_network_create_-d_transparent_trans.JPG)
 
 Goodbye and Good Luck! 
 
 
 ## 5. Reference:
-a. Docker Desktop for Windows
-   https://hub.docker.com/editions/community/docker-ce-desktop-windows
-b. ASP.NET - By Microsoft - Official images for ASP.NET
-   https://hub.docker.com/_/microsoft-dotnet-framework-aspnet
-c. Modernizing Traditional .NET Apps with Docker
-   https://docs.microsoft.com/en-us/archive/msdn-magazine/2017/april/containers-modernizing-traditional-net-apps-with-docker
-d. New-WebApplication
-   https://docs.microsoft.com/en-us/powershell/module/webadministration/new-webapplication?view=windowsserver2019-ps
-e. Windows docker container cannot ping host
-   https://stackoverflow.com/questions/43074576/windows-docker-container-cannot-ping-host
+1. [Docker Desktop for Windows](https://hub.docker.com/editions/community/docker-ce-desktop-windows)
+2. [ASP.NET - By Microsoft - Official images for ASP.NET](https://hub.docker.com/_/microsoft-dotnet-framework-aspnet)
+3. [Modernizing Traditional .NET Apps with Docker](https://docs.microsoft.com/en-us/archive/msdn-magazine/2017/april/containers-modernizing-traditional-net-apps-with-docker)
+4. [New-WebApplication](https://docs.microsoft.com/en-us/powershell/module/webadministration/new-webapplication?view=windowsserver2019-ps)
+5. [Windows docker container cannot ping host](   https://stackoverflow.com/questions/43074576/windows-docker-container-cannot-ping-host)
 
 
-## EOF (2021/10/19)
-## EOF (2022/06/26)
+## EOF (2021/10/19 Created)
+## EOF (2022/06/26 Revised)
