@@ -34,7 +34,7 @@ All packages are installed via NuGet package manager at application level. It co
 oracle database as defined in web.config: 
 
 ```xml
-<add name="conn" connectionString="DATA SOURCE=oracle12-scan/mypdb;USER ID=myuserid;PASSWORD=mypwd;PERSIST SECURITY INFO=True;Connection Timeout=120;Max Pool Size=500;" providerName="Oracle.ManagedDataAccess.Client" />
+<add name="conn" connectionString="DATA SOURCE=my-oracle/mypdb;USER ID=myuserid;PASSWORD=mypwd;PERSIST SECURITY INFO=True;Connection Timeout=120;Max Pool Size=500;" providerName="Oracle.ManagedDataAccess.Client" />
 ```
 
 TA uses **.NET v4.5 Classic** application pool runs under **Default Web Site**. 
