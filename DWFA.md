@@ -1,25 +1,32 @@
-Dockerize WebForm Application (DWFA)
-====================================
-「最後一公里」之「行百里者半於九十。」
+# Dockerize WebForm Application<br /> ─ 「[最後一公里](https://zh.wikipedia.org/zh-tw/%E6%9C%80%E5%90%8E%E4%B8%80%E5%85%AC%E9%87%8C)」之「[行百里者半於九十](https://ctext.org/zhan-guo-ce/qin-wu/zh)」
 
 
-0. Prologue
+## 0. Prologue
 It was a windy Friday night, I laid as if i had been stabbed on my back. My brain awake 
 but i was unable to move. Numb as i was and spirits floating around. Suddenly, a 
-strange idea dawned upon me to dockerize ta so as to improve my IT skills. 
+strange idea dawned upon me to *dockerize* ta so as to improve my IT skills. 
 
 I thought again and again what I was doing and what was still missing. Procedures and 
 steps to fulfill my plan was vaguely formed. It was an experiment to run real world 
-WebForm Application on Docker containers, on Windows platform of course. 
+**WebForm** Application on Docker containers, on Windows platform of course. 
 
-The only software I need was "Docker Desktop for Windows". The price is free, the value 
-is priceless -- in order to run Windows containers, Hyper-V is a must! That means after  
-installation, virtualization software such as VMWare and VirtualBox will cease to function. 
+The only software I need was [Docker Desktop for Windows](https://docs.docker.com/desktop/windows/install/). The price is free, the value is priceless -- in order to run Windows containers, [Hyper-V](https://docs.microsoft.com/en-us/virtualization/hyper-v-on-windows/about/) is a must! That means after installation, virtualization software such as [VMWare](https://en.wikipedia.org/wiki/VMware_Workstation) and [VirtualBox](https://en.wikipedia.org/wiki/VirtualBox) will cease to function. 
 
-To be honest, Windows container is a barren field that few people dare to challenge with... 
+To be honest, Windows container is a barren field (*virgin* was used in draft) that few people dare to challenge with... 
+
+---
+### `corrigendum`
+According to [Oracle&copy; VM VirtualBoxAdministrator's Guide for Release 6.0](https://docs.oracle.com/en/virtualization/virtualbox/6.0/admin/hyperv-support.html): 
+
+> 2.33. Using Hyper-V with Oracle VM VirtualBox<br />
+Oracle VM VirtualBox can be used on a Windows host where Hyper-V is running. This is an experimental feature. <br /><br />
+No configuration is required. Oracle VM VirtualBox detects Hyper-V automatically and uses Hyper-V as the virtualization engine for the host system. The CPU icon in the VM window status bar indicates that Hyper-V is being used.<br /><br />
+**Note**<br />
+When using this feature, some host systems might experience significant Oracle VM VirtualBox performance degradation.<br />
+---
 
 
-1. The App
+## 1. The App
 This is the easy part. Since TA is written in such a way that no external dependency exists. 
 All packages are installed via NuGet package manager at application level. It connects to an 
 oracle database as defined in web.config: 
@@ -30,7 +37,7 @@ oracle database as defined in web.config:
 TA uses ".NET v4.5 Classic" application pool runs under 'Default Web Site'. 
 
 
-2. The Image 
+## 2. The Image 
 Officially, there are two images capable of running WebForm programs: 
    mcr.microsoft.com/dotnet/framework/aspnet:4.8
 for .NET framework version 4.8, which is the latest.  
@@ -41,7 +48,7 @@ for .NET framework version 3.5, which is for older programs.
 Around 15G each! Just spend some time to pull your image in lunch time... 
 
 
-3. The Scripts 
+## 3. The Scripts 
 The hardcore part of dockerizing is to create a Dockerfile. 
 
    Dockerfile
@@ -89,7 +96,7 @@ get served by Docker.
 A Makefile is used to facilitate the whole build-and-run lifecycle. 
 
 
-4. Summary 
+## 4. Summary 
 In case your windows container can't reach the database, try to run: 
 
    docker network create -d transparent trans
@@ -99,7 +106,7 @@ I don't know why but it works for me...
 Goodbye and Good Luck! 
 
 
-4. Reference:
+## 5. Reference:
 a. Docker Desktop for Windows
    https://hub.docker.com/editions/community/docker-ce-desktop-windows
 b. ASP.NET - By Microsoft - Official images for ASP.NET
@@ -112,7 +119,5 @@ e. Windows docker container cannot ping host
    https://stackoverflow.com/questions/43074576/windows-docker-container-cannot-ping-host
 
 
-
-<EOF>
-Written in 2021/10/19
-
+## EOF (2021/10/19)
+## EOF (2022/06/26)
