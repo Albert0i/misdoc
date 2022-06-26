@@ -39,11 +39,12 @@ occurs.<sup>[[1]](https://stackoverflow.com/questions/20987064/how-to-catch-exce
 
 ```c#
 	protected void sourceDetails_Selected(object sender, SqlDataSourceStatusEventArgs e)
-    	{
-            if (e.Exception != null)
-            {
-            //Doing what we need to do
-	    }
+	{
+		if (e.Exception != null)
+		{
+		//Doing what we need to do
+		}
+		...
 	}
 ```
 
@@ -96,9 +97,9 @@ By means of [[1]](https://stackoverflow.com/questions/20987064/how-to-catch-exce
 
    1. This errors not frequently happen; 
    2. Only dispatchers (分派員) come across this error; 
-   3. A ~~A Markoff~~ mask out will cover up *all* other errors. 
+   3. A ~~Markoff~~ maskout will cover up *all* other errors. 
 
-So, it is not appropriate to let errors from "carts-items.aspx.cs" unseen. 
+So, it is not appropriate to let errors from "carts-items.aspx.cs" unseen... 
 
 
 ## 5. Reference:
@@ -117,15 +118,14 @@ So, it is not appropriate to let errors from "carts-items.aspx.cs" unseen.
 - "UI improvements" means using Javascript/AJAX technique to prevent page postback and thus minimizing flickering (eye-friendly). 
 
 ---
-### `supplementary`
+### `Supplemental Material`
+According to [Oracle® Data Provider for .NET Developer's Guide
+10g Release 1 (10.1)](https://docs.oracle.com/cd/B13789_01/win.101/b10117/features001.htm), the default value of **Maximum number of connections in a pool is 100**. By specifying **Max Pool Size=500** in connection string and this error has not been seen till now... 
 
 ```xml
-<add name="conn" connectionString="DATA SOURCE=my-oracle/mypdb;USER ID=myuserid;PASSWORD=mypwd;PERSIST SECURITY INFO=True;Connection Timeout=120;Max Pool Size=500;" providerName="Oracle.ManagedDataAccess.Client" />
-
 <connectionStrings>
-<add name="conn" connectionString="DATA SOURCE=my-oracle/mypdb;USER ID=myuserid;PASSWORD=mypwd;PERSIST SECURITY INFO=True;Connection Timeout=120;Max Pool Size=500;" providerName="Oracle.ManagedDataAccess.Client" />    
+	<add name="conn" connectionString="DATA SOURCE=my-oracle/mypdb;USER ID=myuserid;PASSWORD=mypwd;PERSIST SECURITY INFO=True;Connection Timeout=120;Max Pool Size=500;" providerName="Oracle.ManagedDataAccess.Client" />    
 </connectionStrings>
-
 ```
 ---
 
