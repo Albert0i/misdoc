@@ -1,4 +1,4 @@
-/*
+﻿/*
  * 🆈2🆁🆄🅽🅽🅴🆁.cs - An ADO.NET SQL helper for Oracle.                         
  *                                                                             
  * Version 1.0                                                                 
