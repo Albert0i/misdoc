@@ -24,10 +24,12 @@ public partial class WebForm2 : System.Web.UI.Page
 
         // Y2Runner
         Y2Runner y2r = new Y2Runner(conn, redis);
+        //Y2Runner y2r = new Y2Runner(conn);
 
-        DataTable dataTable = y2r.RunSelectSQL("select * from tbphysts order by physts", 
-                                                60, 
-                                                new string[] { "Customers", "Orders" });
+        //DataTable dataTable = y2r.RunSelectSQL("select * from tbphysts order by physts", 
+        //                                        60, 
+        //                                        new string[] { "Customers", "Orders" });
+        DataTable dataTable = y2r.RunSelectSQL("select * from tbphysts order by physts");
         GridView1.DataSource = dataTable;
         GridView1.DataBind();
 

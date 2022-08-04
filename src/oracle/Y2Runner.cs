@@ -2,7 +2,7 @@
  * 🆈2🆁🆄🅽🅽🅴🆁.cs - An ADO.NET SQL helper for Oracle.                         
  *                                                                             
  * Version 1.0                                                                 
- * By Alberto Iong on 2022/06/17                                               
+ * By Alberto Iong on 2022/08/04                                               
  *                                                                             
  * This library is free software; you can redistribute it and/or modify it     
  * under the terms of the GNU Lesser General Public License as published by    
@@ -14,7 +14,7 @@
  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public        
  * License for more details.                                                   
  */
-//#undef DEBUG    // <--- Make sure DEBUG is off in production environment. 
+//#undef DEBUG    // <--- Make sure 'DEBUG' is undefined in production environment. 
 
 using System;
 using Oracle.ManagedDataAccess.Client;
@@ -27,6 +27,7 @@ using ServiceStack.Redis;
 using Newtonsoft.Json;
 using System.Text.RegularExpressions;
 using System.Linq;
+using System.Threading;
 
 public partial class Y2Runner : IDisposable
 {
@@ -51,28 +52,28 @@ public partial class Y2Runner : IDisposable
         DataTable ret = new DataTable();
         string HashedKey = ComputeSha256Hash(CommandText);
 
-        #if DEBUG
-            Stopwatch stopwatch = new Stopwatch();
-            long elapsed_time;
-            stopwatch.Start();
+#if DEBUG
+        Stopwatch stopwatch = new Stopwatch();
+        long elapsed_time;
+        stopwatch.Start();
 
-            Debug.WriteLine("Y2Runner.RunSelectSQL: " + CommandText);
-        #endif
-
+        Debug.WriteLine("Y2Runner.RunSelectSQL: " + CommandText);
+#endif
         // With redis
         if ((redis != null) && (redis.GetValue(HashedKey) != null))
         {
             // Hit! Load from cache...
+#if DEBUG
             Debug.WriteLine(String.Format("\"{0}\" hit! load from cache...", HashedKey));
+#endif
             DataSet dataSet = JsonConvert.DeserializeObject<DataSet>(redis.GetValue(HashedKey));
             ret = dataSet.Tables["Table1"];
 
-            #if DEBUG
-                stopwatch.Stop();
-                elapsed_time = stopwatch.ElapsedMilliseconds;
-                Debug.WriteLine(String.Format("{0} milliseconds elapsed.", elapsed_time));
-            #endif
-
+#if DEBUG
+            stopwatch.Stop();
+            elapsed_time = stopwatch.ElapsedMilliseconds;
+            Debug.WriteLine(String.Format("{0} milliseconds elapsed.", elapsed_time));
+#endif
             return ret; 
         }
 
@@ -80,11 +81,16 @@ public partial class Y2Runner : IDisposable
         cmd.CommandText = CommandText;
         ret.Load(cmd.ExecuteReader());
 
+#if DEBUG
+        Thread.Sleep(1000);     // wait 1000 ms 
+#endif
         // With redis and ttl > 0
         if ((redis != null) && (ttl > 0))
         {
             // Missed! Add to cache...
+#if DEBUG
             Debug.WriteLine(String.Format("\"{0}\" missed! Add to cache...", HashedKey));
+#endif
             string JSONValue = JsonConvert.SerializeObject(ret);
             redis.SetValue(HashedKey, String.Format("{{\"Table1\": {0} }}", JSONValue), new TimeSpan(0, 0, ttl));
 
@@ -98,12 +104,11 @@ public partial class Y2Runner : IDisposable
                 }
         }
 
-        #if DEBUG
-            stopwatch.Stop();
-            elapsed_time = stopwatch.ElapsedMilliseconds;
-            Debug.WriteLine(String.Format("{0} milliseconds elapsed.", elapsed_time));
-        #endif
-
+#if DEBUG
+        stopwatch.Stop();
+        elapsed_time = stopwatch.ElapsedMilliseconds;
+        Debug.WriteLine(String.Format("{0} milliseconds elapsed.", elapsed_time));
+#endif
         return ret; 
     }
 
@@ -111,23 +116,21 @@ public partial class Y2Runner : IDisposable
     {
         object ret;
 
-        #if DEBUG
-            Stopwatch stopwatch = new Stopwatch();
-            long elapsed_time;
-            stopwatch.Start();
+#if DEBUG
+        Stopwatch stopwatch = new Stopwatch();
+        long elapsed_time;
+        stopwatch.Start();
 
-            Debug.WriteLine("Y2Runner.RunValueSQL: " + CommandText);
-        #endif
-
+        Debug.WriteLine("Y2Runner.RunValueSQL: " + CommandText);
+#endif
         cmd.CommandText = CommandText;
         ret = cmd.ExecuteScalar();
 
-        #if DEBUG
-                stopwatch.Stop();
-                elapsed_time = stopwatch.ElapsedMilliseconds;
-                Debug.WriteLine(String.Format("{0} milliseconds elapsed.", elapsed_time));
-        #endif
-
+#if DEBUG
+        stopwatch.Stop();
+        elapsed_time = stopwatch.ElapsedMilliseconds;
+        Debug.WriteLine(String.Format("{0} milliseconds elapsed.", elapsed_time));
+#endif
         return ret;
     }
 
@@ -136,23 +139,21 @@ public partial class Y2Runner : IDisposable
         int rows_affected = 0;
         bool ret = true;
 
-        #if DEBUG
-            Stopwatch stopwatch = new Stopwatch();
-            long elapsed_time;
-            stopwatch.Start();
+#if DEBUG
+        Stopwatch stopwatch = new Stopwatch();
+        long elapsed_time;
+        stopwatch.Start();
 
-            Debug.WriteLine("Y2Runner.RunSQL: " + CommandText);
-        #endif
-
+        Debug.WriteLine("Y2Runner.RunSQL: " + CommandText);
+#endif
         cmd.CommandText = CommandText;
         try
         {
             rows_affected = cmd.ExecuteNonQuery();
 
-            #if DEBUG
-                Debug.WriteLine(String.Format("Y2Runner.RunSQL.rows_affected: {0}", rows_affected));
-            #endif
-
+#if DEBUG
+            Debug.WriteLine(String.Format("Y2Runner.RunSQL.rows_affected: {0}", rows_affected));
+#endif
             // Increase pending transaction by 1 
             pendingTrans++;
 
@@ -173,15 +174,14 @@ public partial class Y2Runner : IDisposable
             ret = false;
         }
 
-        #if DEBUG
-            stopwatch.Stop();
-            elapsed_time = stopwatch.ElapsedMilliseconds;
-            Debug.WriteLine(String.Format("{0} milliseconds elapsed.", elapsed_time));
+#if DEBUG
+        stopwatch.Stop();
+        elapsed_time = stopwatch.ElapsedMilliseconds;
+        Debug.WriteLine(String.Format("{0} milliseconds elapsed.", elapsed_time));
 
-            Debug.WriteLine(String.Format("Y2Runner.RunSQL.message: {0}", message));
-            Debug.WriteLine(String.Format("Y2Runner.RunSQL: {0} transaction{1} pending.", pendingTrans, (pendingTrans == 1 ? "" : "s")));
-        #endif
-
+        Debug.WriteLine(String.Format("Y2Runner.RunSQL.message: {0}", message));
+        Debug.WriteLine(String.Format("Y2Runner.RunSQL: {0} transaction{1} pending.", pendingTrans, (pendingTrans == 1 ? "" : "s")));
+#endif
         return ret;
     }
 
@@ -195,19 +195,21 @@ public partial class Y2Runner : IDisposable
 
         cmd.CommandText = CommandText + String.Format(sql_stub, rowid_name);
 
-        #if DEBUG
-            Stopwatch stopwatch = new Stopwatch();
-            long elapsed_time;
-            stopwatch.Start();
+#if DEBUG
+        Stopwatch stopwatch = new Stopwatch();
+        long elapsed_time;
+        stopwatch.Start();
             
-            Debug.WriteLine("Y2Runner.RunInsertSQLYieldRowID: " + cmd.CommandText);
-        #endif
-
+        Debug.WriteLine("Y2Runner.RunInsertSQLYieldRowID: " + cmd.CommandText);
+#endif
         cmd.Parameters.Add(outputParameter);
         try
         {
             rows_affected = cmd.ExecuteNonQuery();
+            
+#if DEBUG
             Debug.WriteLine(String.Format("Y2Runner.RunInsertSQLYieldRowID.rows_affected: {0}", rows_affected));
+#endif
             row_id = Int32.Parse(outputParameter.Value.ToString());
             cmd.Parameters.Remove(outputParameter);
 
@@ -231,24 +233,22 @@ public partial class Y2Runner : IDisposable
             row_id = -1;
         }
 
-        #if DEBUG
-            stopwatch.Stop();
-            elapsed_time = stopwatch.ElapsedMilliseconds;
-            Debug.WriteLine(String.Format("{0} milliseconds elapsed.", elapsed_time));
+#if DEBUG
+        stopwatch.Stop();
+        elapsed_time = stopwatch.ElapsedMilliseconds;
+        Debug.WriteLine(String.Format("{0} milliseconds elapsed.", elapsed_time));
 
-            Debug.WriteLine(String.Format("Y2Runner.RunInsertSQLYieldRowID.message: {0}", message));
-            Debug.WriteLine(String.Format("Y2Runner.RunInsertSQLYieldRowID: {0} transaction{1} pending.", pendingTrans, (pendingTrans == 1 ? "" : "s")));
-        #endif
-
+        Debug.WriteLine(String.Format("Y2Runner.RunInsertSQLYieldRowID.message: {0}", message));
+        Debug.WriteLine(String.Format("Y2Runner.RunInsertSQLYieldRowID: {0} transaction{1} pending.", pendingTrans, (pendingTrans == 1 ? "" : "s")));
+#endif
         return row_id; 
     }
 
     public void Commit()
     {
-        #if DEBUG
-            Debug.WriteLine(String.Format("Y2Runner.Commit: {0} transaction{1} will be committed.", pendingTrans, (pendingTrans == 1 ? "" : "s")));
-        #endif
-
+#if DEBUG
+        Debug.WriteLine(String.Format("Y2Runner.Commit: {0} transaction{1} will be committed.", pendingTrans, (pendingTrans == 1 ? "" : "s")));
+#endif
         tran.Commit();
 
         // Start a local transaction
@@ -262,10 +262,9 @@ public partial class Y2Runner : IDisposable
 
     public void Rollback()
     {
-        #if DEBUG
-            Debug.WriteLine(String.Format("Y2Runner.Rollback: {0} transaction{1} will be rollbacked.", pendingTrans, (pendingTrans == 1 ? "" : "s")));
-        #endif
-
+#if DEBUG
+        Debug.WriteLine(String.Format("Y2Runner.Rollback: {0} transaction{1} will be rollbacked.", pendingTrans, (pendingTrans == 1 ? "" : "s")));
+#endif
         tran.Rollback();
 
         // Start a local transaction
@@ -316,11 +315,10 @@ public partial class Y2Runner : IDisposable
 
     public void Dispose()
     {
-        #if DEBUG
-            Debug.WriteLine(String.Format("Y2Runner.Dispose()"));
-            Debug.WriteLine(String.Format("Y2Runner: {0} transaction{1} pending.", pendingTrans, (pendingTrans == 1 ? "" : "s")));
-        #endif
-
+#if DEBUG
+        Debug.WriteLine(String.Format("Y2Runner.Dispose()"));
+        Debug.WriteLine(String.Format("Y2Runner: {0} transaction{1} pending.", pendingTrans, (pendingTrans == 1 ? "" : "s")));
+#endif
         cmd.Dispose();
     }
 #endregion
@@ -370,15 +368,16 @@ public partial class Y2Runner : IDisposable
             return builder.ToString();
         }
     }
-    #endregion
+#endregion
 
-    #region Helpers
+#region Helpers
     //select * from (select abc from xyz where a=b) a f1, b f2 where f1.key=f2.key
     public string[] ParseCacheTagsfromSelectSQL(string CommandText)
     {
-        #if DEBUG
-            Debug.WriteLine(String.Format("CommandText=[{0}]", CommandText));            
-        #endif
+        //#if DEBUG
+        //    Debug.WriteLine(String.Format("CommandText=[{0}]", CommandText));            
+        //#endif
+
         // 1. Add space before and after , ( and ) to ease subsequent parsing.
         CommandText = CommandText.Replace(",", " , ").
                                   Replace("(", " ( ").
