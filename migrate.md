@@ -1,8 +1,8 @@
 # Migration Guide
 
 ## I. Target servers
-- prod-rw: Read/Write server
-- prod-ro: Read only server
+- **prod-rw**: Read/Write server
+- **prod-ro**: Read only server
 
 ## II. Impact analysys 
 - Level 0: Target based, no need to do anything
@@ -22,11 +22,15 @@
 
 
 ## III. Action plan
-- Phase 1: Infra-structure ie. servers setup and synchronization mechanisms. 
-- Phase 2: Level 1 & Level 2
-- Phase 3: Level 3 & Level 4
-- Phase 4: Level 5 & Level 5
-- Phase 5: Level 7 & Level 8
+- Phase 1: Analyse program sources and wipe off used programs. (3 months)
+- Phase 2: Infra-structure ie. servers setup and synchronization mechanisms.  (3 months)
+- Phase 3: Level 1 & Level 2 (3 months)
+- Phase 4: Level 3 & Level 4 (3 months)
+- Phase 5: Level 5 & Level 5 (3 months)
+- Phase 6: Level 7 & Level 8 (3 months)
 
+## IV. Retrospect
+
+## Appendix 
 
 ## EOF (2022/08/30)
