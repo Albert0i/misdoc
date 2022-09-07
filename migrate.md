@@ -2,7 +2,9 @@
 
 ## 0. prologue
 ### 1. ASP.NET 4.8 is the last version which support WebForm. 
-- 
+- [The History of ASP.NET – Part I](https://www.dotnetcurry.com/aspnet/1492/aspnet-history-part-1)
+- [The History of ASP.NET – Part II (Covers ASP.NET MVC)](https://www.dotnetcurry.com/aspnet/1493/aspnet-history-part-2-mvc)
+- [The History of ASP.NET – Part III (Covers ASP.NET Core)](https://www.dotnetcurry.com/aspnet/1494/aspnet-history-part-3-core)
 
 ### 2. Software Infras-structure 
 - VM, Docker, K8S, HA, Loadbalancing, Server farm, cluster, master/slave etc 
@@ -44,4 +46,4 @@
 
 ## Appendix 
 
-## EOF (2022/08/30)
+## EOF (2022/09/07)
