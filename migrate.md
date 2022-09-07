@@ -1,5 +1,16 @@
 # Migration Guide
 
+## 0. prologue
+### 1. ASP.NET 4.8 is the last version which support WebForm. 
+- 
+
+### 2. Software Infras-structure 
+- VM, Docker, K8S, HA, Loadbalancing, Server farm, cluster, master/slave etc 
+
+### 3. New programming paradigm 
+- Angular, React, Vue, Restful-API etc 
+
+
 ## I. Target servers
 - **prod-rw**: Read/Write server
 - **prod-ro**: Read only server
